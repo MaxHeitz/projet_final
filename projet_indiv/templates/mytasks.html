@@ -73,7 +73,7 @@
                         -ms-user-select: none;
                     }
                 </style>
-            <div class="chart-container" style="position: relative; height:10vh; width:20vw">
+            <div class="chart-container  mx-auto" style="position: relative; height:10vh; width:20vw">
                 <canvas id="myChart" width="400" height="400"></canvas>
                 <script>
                     var ctx = document.getElementById('myChart').getContext('2d');
@@ -91,7 +91,7 @@
                             datasets: [{
                                 label: 'number of tasks',
                                 backgroundColor: 'rgb(255, 99, 132,0.2)',
-                                borderColor: 'rgb(255, 99, 132)',
+                                borderColor: 'rgb(255, 99, 132,0.4)',
                                 data: [
                                     {% for data in chart_data %}
                                 {{data}},
@@ -107,7 +107,7 @@
                         ticks: {
                             beginAtZero: true,
                             min: 0,
-                            stepSize: 1
+                            stepSize: 5
                         }
                     }}
                     });

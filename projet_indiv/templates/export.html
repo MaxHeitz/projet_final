@@ -1,0 +1,36 @@
+  
+{% extends 'base.html' %}
+
+{% block main %}
+<br/><br/><br/><br/>
+
+<!-- Start Jumbotron -->
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1 class="display-4">Export data</h1>
+    <p class="lead">Export the data from database into desired file format</p>
+  </div>
+</div>
+<!-- End Jumbotron -->
+
+<div class="container h-100">
+    <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-10 col-md-8 col-lg-6 text-center">
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <p>Please select format of file.</p>
+                <select name="file-format" class="form-control my-3">
+                    <option selected>Choose format...</option>
+                    <option>CSV</option>
+                    <option>JSON</option>
+                    <option>XLS (Excel)</option>
+                    <option>HTML</option>
+                  </select>
+                <button class="btn btn-primary" type="submit">Export</button>
+              </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
