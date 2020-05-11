@@ -54,7 +54,8 @@
                         <th scope="col" class="text-center">Start date</th>
                         <th scope="col" class="text-center">Due date</th>
                         <th scope="col" class="text-center">Progress</th>
-                        <th scope="col" class="text-center"></th>
+                        <th scope="col" class="text-center">Update</th>
+                        <th scope="col" class="text-center">Delete</th>
                     </tr>
                 </thead>
 
@@ -77,6 +78,9 @@
                                         <img src="https://cdn.onlinewebfonts.com/svg/img_148628.png" width="20" height="20">
                                     </a>
                                 </td>
+                                <td scope="row" class="text-center">
+                                    <a class="btn btn-outline-danger" role="button" href="/removetask/{{task.id}}">X</a>
+                                </td>
                             </tr>
 
                         {% else %}
@@ -94,6 +98,9 @@
                                     <a href="/updatetask/{{task.id}}">
                                         <img src="https://cdn.onlinewebfonts.com/svg/img_148628.png" width="20" height="20">
                                     </a>
+                                </td>
+                                <td scope="row" class="text-center">
+                                    <a class="btn btn-outline-danger" role="button" href="/removetask/{{task.id}}">X</a>
                                 </td>
                             </tr>
                         {% endif %}

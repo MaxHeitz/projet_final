@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from taskmanager.models import Project, Task, Journal, Status
 from taskmanager.forms import NewTaskForm, NewJournalForm
 from django.http import HttpResponse
@@ -17,8 +17,8 @@ def projectprogress(project):
     for task in list_tasks:
         i += 1
         progress += task.progress
-    if i==0 :
-        i=1
+    if i == 0:
+        i = 1
     return (int(progress / i))
 
 
@@ -39,9 +39,7 @@ def projects(request):
         list_projects.append(infos)  # add the infos cells in the list of projects
         infos = []
         count += 1
-    return render(request,'list_projects.html',locals())
-
-
+    return render(request, 'list_projects.html', locals())
 
 
 # View for the display of a project and its details
@@ -50,7 +48,7 @@ def project(request, id_project):
     user = request.user
     project = Project.objects.get(id=id_project)
     list_tasks = Task.objects.filter(project=project)  # List of the tasks of this project
-    progress=projectprogress(project)
+    progress = projectprogress(project)
     return render(request, 'project.html', locals())
 
 
@@ -168,9 +166,9 @@ def mytasks(request):
     user = request.user
     list_tasks = Task.objects.filter(assignee=user)
     list_projects = Project.objects.filter(members=user)
-    chart_data=[]
+    chart_data = []
     for project in list_projects:
-        chart_data.append(Task.objects.filter(assignee=user,project=project).count())
+        chart_data.append(Task.objects.filter(assignee=user, project=project).count())
     return (render(request, 'mytasks.html', locals()))
 
 
@@ -190,21 +188,26 @@ def activity(request, id_project):
     list_members = Project.objects.get(id=id_project).members.all()
     contributions = []
     for member in list_members:
-        contributions.append(nb_contribution(User.objects.get(username=member.username), Project.objects.get(id=id_project)))
+        contributions.append(
+            nb_contribution(User.objects.get(username=member.username), Project.objects.get(id=id_project)))
 
     return (render(request, 'activity.html', locals()))
 
-@login_required
-def gantt(request,id_project):
-    list_members=Project.objects.get(id=id_project).members.all()
-    contributions=[]
-    for member in list_members:
-        contributions.append(nb_contribution(User.objects.get(username=member.username),Project.objects.get(id=id_project)))
-    return(render(request,'gantt.html',locals()))
 
-def nb_contribution(user,project):
-    n=Journal.objects.filter(task__project=project,author=user).count()
-    return(n)
+@login_required
+def gantt(request, id_project):
+    list_members = Project.objects.get(id=id_project).members.all()
+    contributions = []
+    for member in list_members:
+        contributions.append(
+            nb_contribution(User.objects.get(username=member.username), Project.objects.get(id=id_project)))
+    return (render(request, 'gantt.html', locals()))
+
+
+def nb_contribution(user, project):
+    n = Journal.objects.filter(task__project=project, author=user).count()
+    return (n)
+
 
 @login_required
 def export(request):
@@ -216,19 +219,30 @@ def export(request):
         dataset_t = TaskResource().export()
         dataset_j = JournalResource().export()
         if file_format == 'CSV':
-            response = HttpResponse({dataset_p.csv, dataset_s.csv, dataset_t.csv, dataset_j.csv}, content_type='text/csv')
+            response = HttpResponse({dataset_p.csv, dataset_s.csv, dataset_t.csv, dataset_j.csv},
+                                    content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
             return response
         elif file_format == 'JSON':
-            response = HttpResponse({dataset_p.json, dataset_s.json, dataset_t.json, dataset_j.json}, content_type='application/json')
+            response = HttpResponse({dataset_p.json, dataset_s.json, dataset_t.json, dataset_j.json},
+                                    content_type='application/json')
             response['Content-Disposition'] = 'attachment; filename="exported_data.json"'
             return response
         elif file_format == 'XLS (Excel)':
-            response = HttpResponse({dataset_p.xls, dataset_s.xls, dataset_t.xls, dataset_j.xls}, content_type='application/vnd.ms-excel')
+            response = HttpResponse({dataset_p.xls, dataset_s.xls, dataset_t.xls, dataset_j.xls},
+                                    content_type='application/vnd.ms-excel')
             response['Content-Disposition'] = 'attachment; filename="exported_data.xls"'
             return response
         elif file_format == 'HTML':
-            response = HttpResponse({dataset_p.html, dataset_s.html, dataset_t.html, dataset_j.html}, content_type='text/html')
+            response = HttpResponse({dataset_p.html, dataset_s.html, dataset_t.html, dataset_j.html},
+                                    content_type='text/html')
             response['Content-Disposition'] = 'attachment; filename="exported_data.html"'
             return response
     return render(request, 'export.html')
+
+
+@login_required
+def removetask(request, id_task):
+    dtask = Task.objects.get(id=id_task)
+    dtask.delete()
+    return redirect('/project/'+str(dtask.project.id))

@@ -32,5 +32,6 @@ urlpatterns = [
     path('activity/<int:id_project>', views.activity),  # A form to update a already existing task
     path('export/', views.export),  # Exports the data from the app
     path('gantt/<int:id_project>', views.gantt),
+    path('removetask/<int:id_task>',views.removetask)
 
 ]
