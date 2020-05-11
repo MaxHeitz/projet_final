@@ -1,8 +1,9 @@
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from taskmanager.models import Project, Task, Journal, Status
-from taskmanager.forms import NewTaskForm, NewJournalForm
+from taskmanager.forms import NewTaskForm, NewJournalForm, NewProjectForm
 from django.http import HttpResponse
 from .resources import ProjectResource, StatusResource, TaskResource, JournalResource
 
@@ -59,6 +60,14 @@ def task(request, id_task):
     task = Task.objects.get(id=id_task)
     project = Project.objects.get(id=task.project.id)
     list_journals = Journal.objects.filter(task=task)  # List of the Journal entries of this task
+    if request.method == "POST":
+        message = request.POST["message"]
+        user = request.user
+        task = Task.objects.get(id=id_task)
+        date = datetime.now()
+        comment = Journal.objects.create(entry=message, author=user,date=date, task=task)
+        comment.save()
+        return redirect('/task/'+str(task.id))
     return render(request, 'task.html', locals())
 
 
@@ -116,7 +125,7 @@ def updatetask(request, id_task):
 
             project = form['project'].value()
 
-            return task(request, utask.id)  # Display the updated task
+            return redirect('/task/'+str(utask.id))  # Display the updated task
 
     # if a GET (or any other method) we'll create a blank form
     else:
@@ -142,7 +151,7 @@ def newjournal(request, id_task):
             # save
             # redirect to a new URL:
             form.save()
-            return task(request, jtask.id)
+            return redirect('/task/'+str(jtask.id))
         else:
             form = NewJournalForm()
             list_projects = Project.objects.all()
@@ -246,3 +255,28 @@ def removetask(request, id_task):
     dtask = Task.objects.get(id=id_task)
     dtask.delete()
     return redirect('/project/'+str(dtask.project.id))
+
+
+# View to fill a form to create a task and add it to the database
+@login_required
+def newproject(request):
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = NewProjectForm(request.POST)
+        print(form['members'].value())
+
+        # check whether it's valid:
+        if form.is_valid():
+            form.save()
+            id_project=form['id'].value()
+
+            return redirect('/project/'+str(id_project))  # if the form is valid, save it in database and display the new project
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = NewProjectForm()
+        list_members=User.objects.all()
+        print(form['members'].value())
+
+    return render(request, 'newproject.html', locals())

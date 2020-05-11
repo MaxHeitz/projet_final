@@ -1,6 +1,6 @@
 from django.forms import forms, ModelForm
 
-from taskmanager.models import Task, Journal
+from taskmanager.models import Task, Journal, Project
 
 
 # Different forms
@@ -17,3 +17,9 @@ class NewJournalForm(ModelForm):
     class Meta:
         model = Journal
         exclude = ('date',)  # Date/time auto-filled with the current date/time
+
+#A form based on the Project model
+class NewProjectForm(ModelForm):
+    class Meta:
+        model= Project
+        fields = '__all__'
