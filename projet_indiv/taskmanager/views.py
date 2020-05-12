@@ -27,6 +27,7 @@ def projectprogress(project):
 @login_required
 def projects(request):
     user = request.user
+    projects=Project.objects.filter(members=user)
     list_projects = []  # Each cell of list_projects will contains information about a project
     infos = []  # the info cell of a project
     count = 0
@@ -47,9 +48,18 @@ def projects(request):
 @login_required
 def project(request, id_project):
     user = request.user
+    projects=Project.objects.filter(members=user)
     project = Project.objects.get(id=id_project)
     list_tasks = Task.objects.filter(project=project)  # List of the tasks of this project
     progress = projectprogress(project)
+    members=project.members.all()
+
+    # # Now we apply more filters if the user requested some...
+
+    list_tasks, status_q_list, query_list, date1, date2, date3, date4, project_query = filters(request, list_tasks)
+    list_tasks = ordering(request, list_tasks)
+    # Needed for the template and form...
+    Status_all = Status.objects.all()
     return render(request, 'project.html', locals())
 
 
@@ -57,6 +67,7 @@ def project(request, id_project):
 @login_required
 def task(request, id_task):
     user = request.user
+    projects=Project.objects.filter(members=user)
     task = Task.objects.get(id=id_task)
     project = Project.objects.get(id=task.project.id)
     list_journals = Journal.objects.filter(task=task)  # List of the Journal entries of this task
@@ -74,6 +85,7 @@ def task(request, id_task):
 # View to fill a form to create a task and add it to the database
 @login_required
 def newtask(request):
+    projects=Project.objects.filter(members=request.user)
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -82,7 +94,7 @@ def newtask(request):
         if form.is_valid():
             form.save()
             project = form['project'].value()
-            return task(request, form.instance.id)  # if the form is valid, save it in database and display the new task
+            return redirect('/task/'+str(form.instance.id))  # if the form is valid, save it in database and display the new task
         else:  # if not, initialize the form and display the form
             form = NewTaskForm()
             list_projects = Project.objects.all()
@@ -103,6 +115,7 @@ def newtask(request):
 # View to update a task
 @login_required
 def updatetask(request, id_task):
+    projects=Project.objects.filter(members=request.user)
     utask = Task.objects.get(id=id_task)
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -140,6 +153,7 @@ def updatetask(request, id_task):
 # View to add a new journal entry
 @login_required
 def newjournal(request, id_task):
+    projects=Project.objects.filter(members=request.user)
     jtask = Task.objects.get(id=id_task)
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -170,8 +184,11 @@ def newjournal(request, id_task):
     return render(request, 'newjournal.html', locals())
 
 
+
+
 @login_required
 def mytasks(request):
+    projects=Project.objects.filter(members=request.user)
     user = request.user
     list_tasks = Task.objects.filter(assignee=user)
     list_projects = Project.objects.filter(members=user)
@@ -180,9 +197,36 @@ def mytasks(request):
         chart_data.append(Task.objects.filter(assignee=user, project=project).count())
     return (render(request, 'mytasks.html', locals()))
 
+@login_required
+def search(request):
+    members = User.objects.all()
+    projects=Project.objects.filter(members=request.user)
+    # First we check if a search was made, i.e if the Get request contains a "query" element
+    if (request.method == "GET") and ("query" in request.GET):
+        bool = True
+        query = request.GET["query"]
+        query_list = query.split()
+        user = request.user
+        list_tasks = Task.objects.filter(name__contains=query)
+    # Else we just show the user all of HIS tasks
+    else:
+        bool= False
+        user = request.user
+        list_tasks = Task.objects.filter(assignee=user)
+        list_projects = Project.objects.filter(members=user)
+        chart_data = []
+        for project in list_projects:
+            chart_data.append(Task.objects.filter(assignee=user, project=project).count())
+    list_tasks, status_q_list, query_list, date1, date2, date3, date4, project_query = filters(request, list_tasks)
+
+    list_tasks = ordering(request,list_tasks)
+    # Needed for the template and form...
+    Status_all = Status.objects.all()
+    return render(request, 'search.html', locals())
 
 @login_required
 def donetasks(request):
+    projects=Project.objects.filter(members=request.user)
     user = request.user
     done_status = Status.objects.get(name="Terminée")
     list_tasks = Task.objects.filter(assignee=user, status=done_status)
@@ -191,6 +235,7 @@ def donetasks(request):
 
 @login_required
 def activity(request, id_project):
+    projects=Project.objects.filter(members=request.user)
     user = request.user
     project = Project.objects.get(id=id_project)
     list_journals = Journal.objects.filter(task__project=project).order_by('-date')
@@ -220,6 +265,7 @@ def nb_contribution(user, project):
 
 @login_required
 def export(request):
+    projects=Project.objects.filter(members=request.user)
     if request.method == 'POST':
         # Get selected option from form
         file_format = request.POST['file-format']
@@ -247,11 +293,12 @@ def export(request):
                                     content_type='text/html')
             response['Content-Disposition'] = 'attachment; filename="exported_data.html"'
             return response
-    return render(request, 'export.html')
+    return render(request, 'export.html',locals())
 
 
 @login_required
 def removetask(request, id_task):
+    projects=Project.objects.filter(members=request.user)
     dtask = Task.objects.get(id=id_task)
     dtask.delete()
     return redirect('/project/'+str(dtask.project.id))
@@ -260,6 +307,7 @@ def removetask(request, id_task):
 # View to fill a form to create a task and add it to the database
 @login_required
 def newproject(request):
+    projects=Project.objects.filter(members=request.user)
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -280,3 +328,71 @@ def newproject(request):
         print(form['members'].value())
 
     return render(request, 'newproject.html', locals())
+
+########Analog function for better readability, used for filtering queries #####------Ne fonctionne pas encore
+def ordering(request, list_tasks):
+    if (request.method == "GET") and ('sort' in request.GET):
+        query = request.GET["sort"]
+        q = query.split()
+        if q[1] == "up":
+            list_tasks = list_tasks.filter().order_by(q[0])
+        else:
+            list_tasks =list_tasks.order_by('-' + q[0])
+    return list_tasks
+
+
+def filters(request, list_tasks):
+    # Initialisation des variables pour pouvoir return une liste vide si on a pas les methodes get necessaires..
+    status_q_list = []
+    project_q_list = []
+    query_list = []
+
+    date1 = datetime.today().date()
+    date2 = datetime.today().date()
+    date3 = datetime.today().date()
+    date4 = datetime.today().date()
+
+    # cette partie sert simplement a convertir les placehholder dans le bon format pour django
+    date1 = date1.isoformat()
+    date2 = date2.isoformat()
+    date3 = date3.isoformat()
+    date4 = date4.isoformat()
+
+    # On verifie si l'utilisateur a voulu filtrer selon le status ou pas
+    if (request.method == "GET") and ('status' in request.GET):
+        status_q = request.GET.getlist("status")
+        status_q_list = [Status.objects.all().get(name=s) for s in status_q]
+        list_tasks = list_tasks.filter(status__in=status_q_list)
+    # On verifier si l'utilisateur a voulu filtrer selon le projet
+    if (request.method == "GET") and ('project' in request.GET):
+        project_q = request.GET.getlist("project")
+        project_q_list = [Project.objects.all().get(name=s) for s in project_q]
+        list_tasks = list_tasks.filter(project__in=project_q_list)
+    # On verifie si l'utilisateur a voulu filtrer selon les membres ou pas
+    if (request.method == "GET") and ('member' in request.GET):
+        query = request.GET.getlist("member")
+        query_list = [User.objects.all().get(username=m) for m in query]
+        list_tasks = list_tasks.filter(assignee__in=query_list)
+    # On verifie si l'utilisateur a voulu filtrer selon les dates, je verifie donc si "date1" est incluse, et je receuille quand meme les autres, ou pas
+    if (request.method=="GET" and ('date1' in request.GET)):
+        date1 = request.GET["date1"]
+        date2 = request.GET["date2"]
+        date3 = request.GET["date3"]
+        date4 = request.GET["date4"]
+        #Rmq: comme la requete "date" est toujurs presente si on submit une recherche, je ne filtre que sur celles qui sont non nulles....
+        if date1 != '':
+            list_tasks = list_tasks.filter(start_date__gte=date1)
+        if date2 != '':
+            list_tasks = list_tasks.filter(start_date__lte=date2)
+        if date3 != '':
+            list_tasks = list_tasks.filter(due_date__gte=date3)
+        if date4 != '':
+            list_tasks = list_tasks.filter(due_date__lte=date4)
+    if (request.method == "GET" and (('maxProgress' in request.GET) or ('minProgress' in request.GET))):
+        max = request.GET['maxProgress']
+        min = request.GET['minProgress']
+        list_tasks = list_tasks.filter(progress__range=[int(min[:-3]),int(max[:-3])])
+    # Enfin ces retours sont utilisés pour le template, pour une meilleure ergonomie je garde affichée les parametres de la recherche precendete.
+
+    return (list_tasks, status_q_list, query_list, date1, date2, date3, date4, project_q_list)
+

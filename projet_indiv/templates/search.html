@@ -1,56 +1,33 @@
+
 {% extends 'base.html' %}
 
 {% block main %}
     <!-- Main container -->
     <main .ml-1>
-        <br><br> &ensp;
+        <br><br><br><br>
 
-        <!-- Breadcrumb (path) -->
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/projects">Projects</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{project.name}}</li>
-                </ol>
-            </nav>
-        </div>
-
-
-
-        <br>
-
-        <!-- jumbotron -->
+        <!-- Jumbotron -->
         <div class="jumbotron jumbotron-fluid">
           <div class="container">
-            <h1 class="display-4">{{project.name}}</h1>
-            <p class="lead">Here is the list the tasks involved in {{project.name}}</p>
-              <a class="btn btn-primary" href="/newtask/" role="button">New Task</a>
-              &ensp; &ensp;
-              <a class="btn btn-warning" href="/activity/{{project.id}}" role="button">Activity</a>
+            <h1 class="display-4">Your Search</h1>
+            <p class="lead">The list of all tasks corresponding to your search</p>
           </div>
         </div>
 
-        <p class="col-8">
-            <b><u>Overall progress :</u></b> &ensp;
-            <div class="col-12">
-                <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{progress}}" aria-valuemin="0" aria-valuemax="100" style="width:{{progress}}%">{{progress}}%</div>
-                </div>
-            </div>
-        </p>
-
-        <br>
-
             <!--   Checkbox for search     -->
         &ensp;&ensp;
-        <button class="btn btn-outline-dark "  type="button" data-toggle="collapse" data-target="#Filtering" aria-expanded="false" aria-controls="collapseExample">
+        <button class="btn btn-outline-dark " type="button" data-toggle="collapse" data-target="#Filtering" aria-expanded="false" aria-controls="collapseExample">
             Advanced Search
         </button>
         <div class="collapse" id="Filtering">
             <div class="card card-body">
 
-                <form action="/project/{{id_project}}" class="inline">
+                <form action="/search" class="inline">
                     <div class="row">
+                    <!-- Pour maintenir la recherche effectuee..-->
+                         {% if bool%}
+                                <input class="form-control mr-sm-2" type="hidden" name="query" value ="{{query}}">
+                        {%endif%}
                     <!--  Member Filter-->
                         <div class="col-2" style="margin-left: 10px" >
                             <label class="form-check-label" for="member_check">Members</label>
@@ -60,6 +37,15 @@
                             </div>
                             {%endfor%}
                         </div>
+                    <!-- Project Filter -->
+                    <div class="col-2">
+                        <label class="form-check-label" for="project_check">Projects</label>
+                            {% for p in projects %}
+                            <div class="form-check" id="project_check">
+                                <input type="checkbox" class="form-check-input" id="project" name="project" {%if p in project_query%}checked{%endif%} value="{{p.name}}">{{p.name}}
+                            </div>
+                            {%endfor%}
+                    </div>
                     <!-- Start Date Filter-->
                         <div class="col-2">
                             <div class="form-group"> <!-- Date input -->
@@ -106,131 +92,119 @@
                             </div>
                         </div>
                     </div>
+                    <br>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
 
             </div>
         </div>
         <br><br><br>
+        <div class="row">
+            <div class="col-12">
+                <!-- Table of tasks -->
+                <table class="table">
 
-        <div class="col-12">
+                    <!-- heads -->
+                    <thead>
+                        <tr>
+                            <th scope="col" >Task
+                            <a href="/search/?sort=name+up&query={{query}}">
+                        <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
+                        </svg></a>
+                            <a href="/search?sort=name+down&query={{query}}">
+                            <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
+                            </svg></a>
+                            </th>
 
-            <!-- Table of tasks -->
-            <table class="table">
-
-                <!-- heads -->
-                <thead>
-                    <tr>
-                        <th scope="col" >Task
-                            <a href="/project/{{id_project}}?sort=name+up">
+                            <th scope="col" class="text-center">Assignee
+                                <a href="/search/?sort=assignee+up&query={{query}}">
                         <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
                         </svg> </a>
-                            <a href="/project/{{id_project}}?sort=name+down">
+                                <a href="/search?sort=assignee+down&query={{query}}">
                             <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
 </svg></a>
-                        </th>
+                            </th>
+                            <th scope="col" class="text-center">Project
+                                 <a href="/search/?sort=project+up&query={{query}}">
+                        <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
+                        </svg></a>
+                            <a href="/search?sort=project+down&query={{query}}">
+                            <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
+                            </svg></a>
+                            </th>
 
-                        <th scope="col" class="text-center">Assignee
-                            <a href="/project/{{id_project}}?sort=assignee+up">
+                            <th scope="col" class="text-center">Start date
+                                <a href="/search/?sort=start_date+up&query={{query}}">
                         <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
                         </svg> </a>
-                            <a href="/project/{{id_project}}?sort=assignee+down">
+                                <a href="/search?sort=start_date+down&query={{query}}">
                             <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
-</svg></a>
-                        </th>
-                        <th scope="col" class="text-center">Start date
-                            <a href="/project/{{id_project}}?sort=start_date+up">
+                            </svg></a>
+                            </th>
+
+                            <th scope="col" class="text-center">Due date
+                                <a href="/search/?sort=due_date+up&query={{query}}">
                         <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
                         </svg> </a>
-                            <a href="/project/{{id_project}}?sort=start_date+down">
+                                <a href="/search?sort=due_date+down&query={{query}}">
                             <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
-</svg></a>
-                        </th>
+                            </svg></a>
+                            </th>
 
-                        <th scope="col" class="text-center">Due date
-                            <a href="/project/{{id_project}}?sort=due_date+up">
+                            <th scope="col" class="text-center">Progress
+                            <a href="/search/?sort=progress+up&query={{query}}">
                         <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
                         </svg> </a>
-                            <a href="/project/{{id_project}}?sort=due_date+down">
+                                <a href="/search?sort=progress+down&query={{query}}">
                             <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
-</svg></a>
-                        </th>
+                            </svg></a>
+                            </th>
 
-                        <th scope="col" class="text-center">Progress
-                            <a href="/project/{{id_project}}?sort=progress+up">
-                        <svg class="bi bi-caret-up-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-  <path d="M7.247 4.86l-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 00.753-1.659l-4.796-5.48a1 1 0 00-1.506 0z"/>
-                        </svg> </a>
-                            <a href="/project/{{id_project}}?sort=progress+down">
-                            <svg class="bi bi-caret-down-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-  <path d="M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z"/>
-</svg></a>
-                        </th>
+                            <th scope="col" class="text-center"></th>
+                        </tr>
+                    </thead>
 
-                        <th scope="col" class="text-center">Update</th>
-                        <th scope="col">Delete</th>
-                    </tr>
-                </thead>
+                    <!-- body of the table -->
+                    <tbody>
+                        {% for task in list_tasks %}
+                                <tr>
+                                    <th scope="row" ><a href="/task/{{task.id}}">{{task.name}}</a></th>
+                                    <th scope="row" >{{task.assignee}}</th>
+                                    <th scope="row" class="text-center"><a href="/project/{{task.project.id}}">{{task.project.name}}</a></th>
+                                    <td scope="row" class="text-center">{{task.start_date}}</td>
+                                    <td scope="row" class="text-center">{{task.due_date}}</td>
+                                    <td scope="row" class="text-center">
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{task.progress}}" aria-valuemin="0" aria-valuemax="100" style="width:{{task.progress}}%">{{task.progress}}%</div>
+                                        </div>
+                                    </td>
+                                    <td scope="row" class="text-center">
+                                        <a href="/updatetask/{{task.id}}">
+                                            <img src="https://cdn.onlinewebfonts.com/svg/img_148628.png" width="20" height="20">
+                                        </a>
+                                    </td>
+                                </tr>
 
-                <!-- body of the table -->
-                <tbody>
-                    {% for task in list_tasks %}
-                        {% if task.assignee == user %}
-                            <tr>
-                                <th scope="row" ><a href="/task/{{task.id}}">{{task.name}}</a></th>
-                                <td scope="row" class="text-center"><span class="badge badge-danger">{{task.assignee}}</span></td>
-                                <td scope="row" class="text-center">{{task.start_date}}</td>
-                                <td scope="row" class="text-center">{{task.due_date}}</td>
-                                <td scope="row" class="text-center">
-                                    <div class="progress">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{task.progress}}" aria-valuemin="0" aria-valuemax="100" style="width:{{task.progress}}%">{{task.progress}}%</div>
-                                    </div>
-                                </td>
-                                <td scope="row" class="text-center">
-                                    <a href="/updatetask/{{task.id}}">
-                                        <img src="https://cdn.onlinewebfonts.com/svg/img_148628.png" width="20" height="20">
-                                    </a>
-                                </td>
-                                <td scope="row">
-                                    <a class="btn btn-outline-danger" role="button" href="/removetask/{{task.id}}">X</a>
-                                </td>
-                            </tr>
+                        {% endfor %}
+                    </tbody>
 
-                        {% else %}
-                            <tr>
-                                <th scope="row"><a href="/task/{{task.id}}">{{task.name}}</a></th>
-                                <td scope="row" class="text-center"><span class="badge badge-primary">{{task.assignee}}</span></td>
-                                <td scope="row" class="text-center">{{task.start_date}}</td>
-                                <td scope="row" class="text-center">{{task.due_date}}</td>
-                                <td scope="row" class="text-center">
-                                    <div class="progress">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="{{task.progress}}" aria-valuemin="0" aria-valuemax="100" style="width:{{task.progress}}%">{{task.progress}}%</div>
-                                    </div>
-                                </td>
-                                <td scope="row" class="text-center">
-                                    <a href="/updatetask/{{task.id}}">
-                                        <img src="https://cdn.onlinewebfonts.com/svg/img_148628.png" width="20" height="20">
-                                    </a>
-                                </td>
-                                <td scope="row">
-                                    <a class="btn btn-outline-danger" role="button" href="/removetask/{{task.id}}">X</a>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-
-            </table>
-            <!-- end of table -->
+                </table>
+                <!-- end of table -->
         </div>
 
+
+
     </main>
-{% endblock %}
+    {% endblock %}>

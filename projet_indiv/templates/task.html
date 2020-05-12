@@ -93,27 +93,38 @@
             <br>
             <br>
 
-            <a class="btn btn-primary" href="/newjournal/{{task.id}}" role="button">New Entry</a>
 
             <br><br>
 
             <!-- Journal History -->
-            <div class="col-6">
+            <div class="col-8">
                 <b>History</b>
                 <table class="table">
                     <tbody>
                         {% for journal in list_journals %}
                             <tr>
                                 <td><span class="badge badge-primary">{{journal.author}}</span></td>
-                                <td>{{journal.date}}</td>
+                                <td><i>{{journal.date}}</i></td>
                                 <td>{{journal.entry}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+
+
+
+                <form method="Post" >
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="message" value="" placeholder="..."/>
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-info" type="submit">Send</button>
+                      </div>
+                    </div>
+                </form>
+                &ensp;&ensp;&ensp;
+
             </div>
-
-
         </div>
     </main>
 
