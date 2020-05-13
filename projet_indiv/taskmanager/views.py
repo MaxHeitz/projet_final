@@ -39,7 +39,7 @@ def projects(request):
         infos.append(
             list(Project.objects.filter(members=user))[count])  # 1st cell of infos contains the members of the project
         infos.append(Task.objects.filter(project=project))  # 2nd cell of infos contains the tasks of the project
-        infos.append(Task.objects.filter(project=project).order_by(
+        infos.append(Task.objects.filter(project=project,due_date__gte=datetime.now()).order_by(
             "due_date"))  # 3rd cell of infos contains the tasks of the project ordered by due_date
         infos.append(projectprogress(project))
         list_projects.append(infos)  # add the infos cells in the list of projects

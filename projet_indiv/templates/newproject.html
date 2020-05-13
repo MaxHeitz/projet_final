@@ -36,7 +36,7 @@
 
                             <br><br>
                               <div class="form-group">
-                                <label for="id_members">Example multiple select</label>
+                                <label for="id_members">Select members (hold CTRL)</label>
                                 <select multiple class="form-control" name="members" required id="id_members" multiple>
                                     {% for member in list_members %}
                                            <option value="{{member.id}}">{{member.username}}</option>
