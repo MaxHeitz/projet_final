@@ -1,10 +1,14 @@
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.sessions import serializers
 from django.shortcuts import render, redirect
 from taskmanager.models import Project, Task, Journal, Status
 from taskmanager.forms import NewTaskForm, NewJournalForm, NewProjectForm
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+import csv
+import xlwt
+from django.core import serializers
 from .resources import ProjectResource, StatusResource, TaskResource, JournalResource
 
 
@@ -265,35 +269,224 @@ def nb_contribution(user, project):
 
 @login_required
 def export(request):
-    projects=Project.objects.filter(members=request.user)
     if request.method == 'POST':
-        # Get selected option from form
         file_format = request.POST['file-format']
-        dataset_p = ProjectResource().export()
-        dataset_s = StatusResource().export()
-        dataset_t = TaskResource().export()
-        dataset_j = JournalResource().export()
+        data_type = request.POST['data-type']
         if file_format == 'CSV':
-            response = HttpResponse({dataset_p.csv, dataset_s.csv, dataset_t.csv, dataset_j.csv},
-                                    content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
-            return response
-        elif file_format == 'JSON':
-            response = HttpResponse({dataset_p.json, dataset_s.json, dataset_t.json, dataset_j.json},
-                                    content_type='application/json')
-            response['Content-Disposition'] = 'attachment; filename="exported_data.json"'
-            return response
-        elif file_format == 'XLS (Excel)':
-            response = HttpResponse({dataset_p.xls, dataset_s.xls, dataset_t.xls, dataset_j.xls},
-                                    content_type='application/vnd.ms-excel')
-            response['Content-Disposition'] = 'attachment; filename="exported_data.xls"'
-            return response
-        elif file_format == 'HTML':
-            response = HttpResponse({dataset_p.html, dataset_s.html, dataset_t.html, dataset_j.html},
-                                    content_type='text/html')
-            response['Content-Disposition'] = 'attachment; filename="exported_data.html"'
-            return response
-    return render(request, 'export.html',locals())
+            response = HttpResponse(content_type='text/csv')
+            writer = csv.writer(response)
+            if data_type == 'Projects':
+                response['Content-Disposition'] = 'attachment; filename="projects.csv"'
+                writer.writerow(['Project', 'Members', 'Tasks'])
+                for p in Project.objects.all():
+                    members = ''
+                    for m in p.members.all():
+                        members += ', ' + m.username
+                    members = members.replace(',', '', 1)
+
+                    tasks = ''
+                    for t in p.task_set.all():
+                        tasks += ',' + t.name
+                    tasks = tasks.replace(',', '', 1)
+
+                    writer.writerow([p.name, members, tasks])
+                return response
+            if data_type == 'Tasks':
+                response['Content-Disposition'] = 'attachment; filename="tasks.csv"'
+                writer.writerow(['Name', 'Project', 'Description', 'Assignee', 'Start Date', 'Due Date', 'Priority', 'Status', 'Progress'])
+                for t in Task.objects.all():
+                    writer.writerow([t.name, t.project, t.description, t.assignee, t.start_date, t.due_date, t.priority, t.status, t.progress])
+                return response
+            if data_type == 'Journals':
+                response['Content-Disposition'] = 'attachment; filename="journals.csv"'
+                writer.writerow(['Entry', 'Date', 'Author', 'Task'])
+                for j in Journal.objects.all():
+                    writer.writerow([j.entry, j.date, j.author, j.task])
+                return response
+            if data_type == 'Status':
+                response['Content-Disposition'] = 'attachment; filename="status.csv"'
+                writer.writerow(['Name'])
+                for s in Status.objects.all():
+                    writer.writerow([s.name])
+                return response
+        if file_format == 'JSON':
+            if data_type == 'Projects':
+                projects_list = []
+                for p in Project.objects.all():
+                    members = ''
+                    for m in p.members.all():
+                        members += ',' + m.username
+                    members = members.replace(',', '', 1)
+
+                    tasks = ''
+                    for t in p.task_set.all():
+                        tasks += ',' + t.name
+                    tasks = tasks.replace(',', '', 1)
+
+                    projects_list.append({"name": p.name, "members": members, "tasks": tasks})
+                response = HttpResponse(JsonResponse(projects_list, safe=False), content_type='application/json')
+                response['Content-Disposition'] = 'attachment; filename="projects.json"'
+                return response
+            if data_type == 'Tasks':
+                tasks = Task.objects.all().values('name', 'project__name', 'description', 'assignee__username', 'start_date', 'due_date', 'priority', 'status__name', 'progress')  # or simply .values() to get all fields
+                tasks_list = list(tasks)  # important: convert the QuerySet to a list object
+                response = HttpResponse(JsonResponse(tasks_list, safe=False), content_type='application/json')
+                response['Content-Disposition'] = 'attachment; filename="tasks.json"'
+                return response
+            if data_type == 'Journals':
+                journals = Journal.objects.all().values('entry', 'date', 'author__username', 'task__name')  # or simply .values() to get all fields
+                journals_list = list(journals)  # important: convert the QuerySet to a list object
+                response = HttpResponse(JsonResponse(journals_list, safe=False), content_type='application/json')
+                response['Content-Disposition'] = 'attachment; filename="journals.json"'
+                return response
+            if data_type == 'Status':
+                status = Status.objects.all().values('name')  # or simply .values() to get all fields
+                status_list = list(status)  # important: convert the QuerySet to a list object
+                response = HttpResponse(JsonResponse(status_list, safe=False), content_type='application/json')
+                response['Content-Disposition'] = 'attachment; filename="status.json"'
+                return response
+        if file_format == 'XLS (Excel)':
+            response = HttpResponse(content_type='application/ms-excel')
+            if data_type == 'Projects':
+                response['Content-Disposition'] = 'attachment; filename="projects.xls"'
+                wb = xlwt.Workbook(encoding='utf-8')
+                ws = wb.add_sheet('Projects')
+
+                # Sheet header, first row
+                row_num = 0
+
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+
+                columns = ['Project', 'Members', 'Tasks']
+                for col_num in range(len(columns)):
+                    ws.write(row_num, col_num, columns[col_num], font_style)
+
+                # Sheet body, remaining rows
+                font_style = xlwt.XFStyle()
+
+                for p in Project.objects.all():
+                    members = ''
+                    for m in p.members.all():
+                        members += ',' + m.username
+                    members = members.replace(',', '', 1)
+
+                    tasks = ''
+                    for t in p.task_set.all():
+                        tasks += ',' + t.name
+                    tasks = tasks.replace(',', '', 1)
+
+                    row_num += 1
+                    ws.write(row_num, 0, p.name, font_style)
+                    ws.write(row_num, 1, members, font_style)
+                    ws.write(row_num, 2, tasks, font_style)
+
+                wb.save(response)
+                return response
+            if data_type == 'Tasks':
+                response['Content-Disposition'] = 'attachment; filename="tasks.xls"'
+                wb = xlwt.Workbook(encoding='utf-8')
+                ws = wb.add_sheet('Tasks')
+
+                # Sheet header, first row
+                row_num = 0
+
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+
+                columns = ['Name', 'Project', 'Description', 'Assignee', 'Start Date', 'Due Date', 'Priority', 'Status', 'Progress']
+                for col_num in range(len(columns)):
+                    ws.write(row_num, col_num, columns[col_num], font_style)
+
+                # Sheet body, remaining rows
+                font_style = xlwt.XFStyle()
+
+                for t in Task.objects.all():
+                    row_num += 1
+                    ws.write(row_num, 0, t.name, font_style)
+                    ws.write(row_num, 1, t.project.name, font_style)
+                    ws.write(row_num, 2, t.description, font_style)
+                    ws.write(row_num, 3, t.assignee.username, font_style)
+                    ws.write(row_num, 4, t.start_date.strftime("%Y-%m-%d"), font_style)
+                    ws.write(row_num, 5, t.due_date.strftime("%Y-%m-%d"), font_style)
+                    ws.write(row_num, 6, t.priority, font_style)
+                    ws.write(row_num, 7, t.status.name, font_style)
+                    ws.write(row_num, 8, t.progress, font_style)
+
+                wb.save(response)
+                return response
+            if data_type == 'Journals':
+                response['Content-Disposition'] = 'attachment; filename="journals.xls"'
+                wb = xlwt.Workbook(encoding='utf-8')
+                ws = wb.add_sheet('Journals')
+
+                # Sheet header, first row
+                row_num = 0
+
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+
+                columns = ['Entry', 'Date', 'Author', 'Task']
+                for col_num in range(len(columns)):
+                    ws.write(row_num, col_num, columns[col_num], font_style)
+
+                # Sheet body, remaining rows
+                font_style = xlwt.XFStyle()
+
+                for j in Journal.objects.all():
+                    row_num += 1
+                    ws.write(row_num, 0, j.entry, font_style)
+                    if j.date:
+                        ws.write(row_num, 1, j.date.strftime("%Y-%m-%d %H:%M"), font_style)
+                    ws.write(row_num, 2, j.author.username, font_style)
+                    ws.write(row_num, 3, j.task.name, font_style)
+
+                wb.save(response)
+                return response
+            if data_type == 'Status':
+                response['Content-Disposition'] = 'attachment; filename="status.xls"'
+                wb = xlwt.Workbook(encoding='utf-8')
+                ws = wb.add_sheet('Status')
+
+                # Sheet header, first row
+                row_num = 0
+
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+
+                ws.write(row_num, 0, 'Name', font_style)
+
+                # Sheet body, remaining rows
+                font_style = xlwt.XFStyle()
+
+                for s in Status.objects.all():
+                    row_num += 1
+                    ws.write(row_num, 0, s.name, font_style)
+
+                wb.save(response)
+                return response
+        if file_format == 'XML':
+            if data_type == 'Projects':
+                data = serializers.serialize("xml", Project.objects.all())
+                response = HttpResponse(data, content_type='text/xml')
+                response['Content-Disposition'] = 'attachment; filename="projects.xml"'
+                return response
+            if data_type == 'Tasks':
+                data = serializers.serialize("xml", Task.objects.all())
+                response = HttpResponse(data, content_type='text/xml')
+                response['Content-Disposition'] = 'attachment; filename="tasks.xml"'
+                return response
+            if data_type == 'Journals':
+                data = serializers.serialize("xml", Journal.objects.all())
+                response = HttpResponse(data, content_type='text/xml')
+                response['Content-Disposition'] = 'attachment; filename="journals.xml"'
+                return response
+            if data_type == 'Status':
+                data = serializers.serialize("xml", Status.objects.all())
+                response = HttpResponse(data, content_type='text/xml')
+                response['Content-Disposition'] = 'attachment; filename="status.xml"'
+                return response
+    return render(request, 'export.html')
 
 
 @login_required
