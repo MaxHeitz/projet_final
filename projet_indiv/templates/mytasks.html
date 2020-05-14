@@ -40,7 +40,7 @@
                         {% for task in list_tasks %}
                                 <tr>
                                     <th scope="row" ><a href="/task/{{task.id}}">{{task.name}}</a></th>
-                                    <th scope="row" class="text-center"><a href="/project/{{task.project.id}}">{{task.project.name}}</a></th>
+                                    <th scope="row" class="text-center"><a type="button" class="btn btn-info" href="/project/{{task.project.id}}">{{task.project.name}}</a></th>
                                     <td scope="row" class="text-center">{{task.start_date}}</td>
                                     <td scope="row" class="text-center">{{task.due_date}}</td>
                                     <td scope="row" class="text-center">

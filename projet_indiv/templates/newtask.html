@@ -28,7 +28,7 @@
                                 <label for="id_project">Project:</label>
                                 <select class="form-control" name="project" required id="id_project">
                                     <option selected>Choose project</option>
-                                    {% for project in list_projects %}
+                                    {% for project in projects %}
                                       <option value="{{project.id}}">{{project.name}}</option>
                                     {% endfor %}
                                  </select>

@@ -18,11 +18,8 @@
 
         <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/starter-template/">
 
-        <!-- Bootstrap core CSS -->
-        <link href="../../dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <!-- Custom styles for this template -->
-        <link href="starter-template.css" rel="stylesheet">
+
     </head>
     <!-- End of head -->
 
@@ -73,18 +70,22 @@
 
         </ul>
 
+
+
         <!--  Bar de Recherche   -->
         <form class="form-inline my-2 my-lg-0" action="/search">
             <input class="form-control mr-sm-2" type="GET" name="query" placeholder="Search task" aria-label="Search">
             <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
         </form>
           &ensp;&ensp;
-        <font face="arial" color="white">Welcome {{user.first_name}} {{user.last_name}} &ensp;&ensp; </font>
+
+
 
 
             <a class="btn btn-outline-info" href="/export">Export Data <span class="sr-only">(current)</span></a>
-
           &ensp;&ensp;
+
+          <font face="arial" color="white">Welcome {{user.first_name}} {{user.last_name}} &ensp;&ensp; </font>
 
 
         <a class="btn btn-danger" href="/accounts/logout" role="button">LOGOUT</a>
@@ -102,8 +103,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
-    <script src="../../assets/js/vendor/popper.min.js"></script>
-    <script src="../../dist/js/bootstrap.min.js"></script>
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

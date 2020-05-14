@@ -30,39 +30,41 @@
 
         <br>
 
-            <div class="row">
-                <div class="col">
+        <div class="row">
+            <div class="col">
 
-            <!-- Table of tasks -->
-            <table class="table">
+                <!-- Table of tasks -->
+                <table class="table">
 
-                <!-- heads -->
-                <thead>
-                    <tr>
-                        <th scope="col" >Task</th>
-                        <th scope="col" class="text-center">Update </th>
-                    </tr>
-                </thead>
+                    <!-- heads -->
+                    <thead>
+                        <tr>
+                            <th scope="col" >Task</th>
+                            <th scope="col" class="text-center">Update </th>
+                        </tr>
+                    </thead>
 
-                <!-- body of the table -->
-                <tbody>
-                    {% for journal in list_journals %}
-                            <tr>
-                                <th scope="row" ><a href="/task/{{journal.task.id}}">{{journal.task.name}}</a></th>
-                                <td scope="row" class="text-center">
-                                    <span class="badge badge-primary">{{journal.author}} </span> : <i> {{journal.entry}}</i><br>
-                                    <font size="-1">{{journal.date}}</font>
+                    <!-- body of the table -->
+                    <tbody>
+                        {% for journal in list_journals %}
+                                <tr>
+                                    <th scope="row" ><a href="/task/{{journal.task.id}}">{{journal.task.name}}</a></th>
+                                    <td scope="row" class="text-center">
+                                        <span class="badge badge-primary">{{journal.author}} </span> : <i> {{journal.entry}}</i><br>
+                                        <font size="-1">{{journal.date}}</font>
 
-                                </td>
+                                    </td>
 
-                            </tr>
-                    {% endfor %}
-                </tbody>
+                                </tr>
+                        {% endfor %}
+                    </tbody>
 
-            </table>
-            <!-- end of table -->
-        </div>
-                <div class="col">
+                </table>
+                <!-- end of table -->
+            </div>
+
+            <!-- Chart -->
+            <div class="col">
 
             <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
             <title>Stacked Bar Chart</title>
@@ -129,8 +131,8 @@
                             }
                     });
                 </script>
-            </div>
         </div>
-            </div>
+    </div>
+        </div>
     </main>
 {% endblock %}
